@@ -56,19 +56,14 @@ sudo apt-get -y install build-essential libffi-dev python python-dev  \
 python-pip automake autoconf libtool indent vim tmux ctags xgrep moreutils \
 python3-numpy python3-pandas python3-matplotlib
 
-# pre-reqs for installing docker
-sudo apt-get -y install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common
-
 # docker
 #sudo apt-get -y install docker-ce docker-ce-cli containerd.io
 
 wget https://github.com/opencontainers/runc/releases/download/v1.1.3/runc.amd64
 sudo install -m 755 runc.amd64 /usr/local/sbin/runc
+wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz
+sudo mkdir -p /opt/cni/bin
+sudo tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
 
 #coontainerd
 sudo apt-get install -y containerd.io
