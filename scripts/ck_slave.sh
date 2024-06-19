@@ -32,9 +32,7 @@ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.
 
 #git clone git@gitlab.flux.utah.edu:licai/deepstitch.git
 
-sudo apt-get update
-sudo apt-get -y install build-essential libffi-dev python python-dev  \
-python-pip automake autoconf libtool indent vim tmux jq
+
 
 #curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
@@ -50,7 +48,9 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 cd $WORKINGDIR
-
+sudo apt-get update
+sudo apt-get -y install build-essential libffi-dev python python-dev  \
+python-pip automake autoconf libtool indent vim tmux jq
 # docker
 #sudo apt-get -y install docker-ce docker-ce-cli containerd.io
 
