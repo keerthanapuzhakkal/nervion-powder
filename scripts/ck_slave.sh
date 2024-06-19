@@ -21,11 +21,15 @@ export KUBECONFIG=$KUBEHOME/admin.conf
 sudo chsh -s /bin/bash $username
 echo "export KUBECONFIG=${KUBECONFIG}" > $HOME/.profile
 
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
-sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+#curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+#sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+#echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.25/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.25/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
-cd $WORKINGDIR
+
 #git clone git@gitlab.flux.utah.edu:licai/deepstitch.git
 
 sudo apt-get update
@@ -40,15 +44,41 @@ sudo apt-get -y install \
     gnupg-agent \
     software-properties-common
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+#curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
+#sudo add-apt-repository \
+#   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+#   $(lsb_release -cs) \
+#   stable"
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+cd $WORKINGDIR
 
 # docker
-sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+#sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+
+wget https://github.com/opencontainers/runc/releases/download/v1.1.3/runc.amd64
+sudo install -m 755 runc.amd64 /usr/local/sbin/runc
+
+#containerd
+sudo apt-get install -y containerd.io
+sudo mkdir -p /etc/containerd/
+containerd config default | sudo tee /etc/containerd/config.toml
+sudo sed -i 's/            SystemdCgroup = false/            SystemdCgroup = true/' /etc/containerd/config.toml
+
+
+sudo curl -L https://raw.githubusercontent.com/containerd/containerd/main/containerd.service -o /etc/systemd/system/containerd.service
+sudo systemctl restart containerd
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now containerd
+
+sudo systemctl status containerd
 
 # Pull the CoreKube image required for the artifact evaluation
 # to speed up the deployment
@@ -56,8 +86,12 @@ ctr image pull docker.io/andrewferguson/corekube-worker5g:latest
 
 # learn from this: https://blog.csdn.net/yan234280533/article/details/75136630
 # more info should see: https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/
-sudo apt-get -y install kubelet=1.21.3-00 kubeadm=1.21.3-00 kubectl=1.21.3-00 kubernetes-cni golang-go jq
-sudo docker version
+#sudo apt-get -y install kubelet=1.21.3-00 kubeadm=1.21.3-00 kubectl=1.21.3-00 kubernetes-cni golang-go jq
+sudo apt-get update
+sudo apt-get -y install kubelet kubeadm kubectl kubernetes-cni golang-go jq
+sudo apt-mark hold kubelet kubeadm kubectl
+#sudo docker version
+sudo modprobe br_netfilter
 sudo swapoff -a
 
 # use geni-get for shared rsa key

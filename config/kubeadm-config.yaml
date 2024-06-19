@@ -1,11 +1,10 @@
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 controllerManager:
   extraArgs:
     horizontal-pod-autoscaler-downscale-stabilization: "10s"
 apiServer:
   extraArgs:
-    feature-gates: SCTPSupport=true
     service-node-port-range: 30000-39000
 networking:
   podSubnet: "10.244.0.0/16"
